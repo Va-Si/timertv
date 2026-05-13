@@ -1,46 +1,37 @@
-const CACHE_NAME = 'turntimer-cache-v4';
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json'
-];
+const CACHE_NAME = 'turntimer-cache-v5';
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
-  );
   self.skipWaiting();
 });
 
+// Noua strategie: Caută mereu pe internet mai întâi (repară refresh-ul). 
+// Folosește memoria (offline) doar dacă internetul e oprit.
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) return response;
-        return fetch(event.request).catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
+    fetch(event.request)
+      .then(networkResponse => {
+        // Actualizăm memoria offline cu cea mai nouă variantă
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseClone);
+        });
+        return networkResponse;
+      })
+      .catch(() => {
+        // Dacă nu avem internet, luăm din memorie
+        return caches.match(event.request).then(cachedResponse => {
+           if (cachedResponse) return cachedResponse;
+           if (event.request.mode === 'navigate') return caches.match('./index.html');
         });
       })
   );
 });
 
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+    ))
   );
   self.clients.claim();
 });
