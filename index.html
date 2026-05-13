@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cronometru - Turnul de Veghe</title>
+    <style>
+        /* Regula vitală pentru ca marginile și padding-ul să nu strice ecranul pe mobil */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-x: hidden; /* Previne scroll-ul orizontal pe mobil */
+        }
+        
+        h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 15px; }
+
+        .settings-area {
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .input-group { flex: 1; min-width: 140px; display: flex; flex-direction: column; }
+        .input-group label { font-weight: bold; margin-bottom: 5px; color: #2c3e50; font-size: 0.85em; }
+        .input-group input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; width: 100%; }
+        
+        .btn-apply {
+            background-color: #2c3e50; color: white; padding: 10px 20px;
+            border: none; border-radius: 6px; font-size: 15px; cursor: pointer;
+            font-weight: bold; height: 42px; transition: 0.3s;
+        }
+        .btn-apply.applied { background-color: rgba(168, 40, 40, 0.75); }
+
+        .sticky-controls {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #f4f7f6;
+            padding-bottom: 15px;
+        }
+
+        .box-chronometer {
+            background: #ffffff;
+            color: #333333; 
+            border: 1px solid #ddd;
+            border-radius: 8px 8px 0 0;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em; 
+        }
+
+        .box-timer {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        
+        .val-remaining { 
+            font-size: 1.5em; 
+            font-weight: bold; 
+            color: #e74c3c; 
+        }
+
+        .action-group { display: flex; gap: 10px; align-items: center; }
+        
+        .btn-start { 
+            background-color: #27ae60; color: white; border: none; padding: 10px 15px; 
+            border-radius: 6px; font-weight: bold; cursor: pointer; min-width: 80px; font-size: 15px;
+            transition: background-color 0.2s;
+        }
+        .btn-pause { 
+            background-color: #f39c12; color: white; border: none; padding: 10px 15px; 
+            border-radius: 6px; font-weight: bold; cursor: pointer; min-width: 80px; font-size: 15px;
+        }
+        
+        .btn-reset-mini {
+            background: white; border: 1px solid #bdc3c7; border-radius: 6px; 
+            width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #2c3e50;
+        }
+
+        /* Paragrafe */
+        .paragraph-item {
+            background: #fff; border: 1px solid #e0e0e0; padding: 15px; 
+            margin-bottom: 12px; border-radius: 8px; display: flex; flex-direction: column;
+            position: relative;
+            padding-top: 25px;
+        }
+        .paragraph-item.active { border-left: 6px solid #3498db; background-color: #eaf2f8; }
+        .paragraph-item.done { border-left: 4px solid #2ecc71; background-color: #f9fdf9; }
+        
+        .par-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            flex-wrap: wrap; 
+            row-gap: 5px;
+            font-weight: bold; 
+            margin-bottom: 12px; 
+            font-size: 1.1em; 
+        }
+        .par-title { white-space: nowrap; }
+        .par-time-container { white-space: nowrap; }
+        
+        .done-text { color: #7f8c8d; text-decoration: line-through; }
+        .finish-label { color: #27ae60; font-size: 0.9em; font-weight: bold; text-decoration: none !important; }
+        
+        .par-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-par { flex: 1; padding: 10px 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-minus { background: #f39c12; color: white; }
+        .btn-plus { background: #9b59b6; color: white; }
+        .btn-std { background: #3498db; color: white; }
+        .btn-finish { background: #2ecc71; color: white; min-width: 100px; font-size: 14px; }
+        .btn-undo { background: #e74c3c; color: white; width: 100%; }
+
+        /* Butonul de unire (+) */
+        .merge-container {
+            display: flex;
+            justify-content: center;
+            margin-top: -18px; 
+            margin-bottom: -6px; 
+            position: relative;
+            z-index: 10;
+        }
+        .btn-merge {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border: 2px solid #bdc3c7;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Butonul de DEZUNIRE (-) */
+        .btn-split {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffffff;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 5;
+            padding: 0;
+            line-height: 1;
+        }
+        .btn-split:hover {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .recap-container {
+            border: 2px dashed #7f8c8d; border-radius: 10px; padding: 15px;
+            margin-top: 30px; background: #fafafa;
+        }
+        .recap-title { font-weight: bold; margin-bottom: 15px; color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+
+        /* ========= REPARARE PENTRU TELEFOANE MOBILE ========= */
+        @media (max-width: 480px) {
+            body { 
+                padding: 10px; /* Reducem marginile pe ecran mic */
+            }
+            .settings-area {
+                flex-direction: column; /* Așează setările una sub alta */
+                align-items: stretch;
+            }
+            .input-group {
+                min-width: 100%;
+            }
+            .btn-apply {
+                width: 100%;
+            }
+            
+            .box-timer { 
+                flex-direction: column; /* Pune butoanele sub cronometru pentru a nu se tăia */
+                gap: 12px;
+                text-align: center;
+            }
+            .val-remaining { 
+                font-size: 1.4em; 
+            }
+            .action-group {
+                width: 100%;
+                justify-content: center;
+            }
+            .btn-start, .btn-pause { 
+                flex: 1; /* Lăsăm butonul start să se întindă flexibil */
+            }
+            .btn-txt { 
+                display: inline; /* Lăsăm textul vizibil deoarece avem loc pe rând nou */
+            }
+
+            .par-header {
+                flex-direction: column; /* Mută timpul paragrafului DEDESUBT */
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .btn-par {
+                padding: 12px 2px; /* Butoane mai înalte, perfecte pentru atingere pe touch */
+                font-size: 12px;
+            }
+            .btn-finish, .btn-undo {
+                flex-basis: 100%; /* Butonul de Finalizare va ocupa tot rândul de jos */
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Cronometru - Turnul de Veghe</h2>
+
+    <div class="settings-area">
+        <div class="input-group">
+            <label>Timp total (min):</label>
+            <input type="number" id="totalTime" value="60">
+        </div>
+        <div class="input-group">
+            <label>Număr paragrafe:</label>
+            <input type="number" id="totalParagraphs" value="18">
+        </div>
+        <button id="btnApply" class="btn-apply" onclick="initApp(true)">Aplică</button>
+    </div>
+
+    <div class="sticky-controls">
+        <div id="elapsedDisplay" class="box-chronometer">
+            Timp scurs 00 min 00 sec
+        </div>
+        <div class="box-timer">
+            <div class="timer-info">
+                <div id="remainingDisplay" class="val-remaining">Timp rămas - 60 min 00 sec</div>
+            </div>
+            <div class="action-group">
+                <button id="btnStartPause" class="btn-start" onclick="toggleTimer()">▶ <span class="btn-txt">Start</span></button>
+                <button class="btn-reset-mini" onclick="resetTimerPrompt()" title="Reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paragraphsList"></div>
+
+    <script>
+        let initialSeconds = 0; 
+        let remainingSeconds = 0;
+        let elapsedSeconds = 0;
+        let items = [];
+        let timerInterval;
+        let historyStack = [];
+        let isRunning = false;
+
+        function formatTime(sec) {
+            let sign = sec < 0 ? "-" : "";
+            let absSec = Math.abs(sec);
+            let m = Math.floor(absSec / 60);
+            let s = absSec % 60;
+            return `${sign}${m} min ${s < 10 ? '0'+s : s} sec`;
+        }
+
+        function initApp(isUserClick = false) {
+            const timeInput = parseInt(document.getElementById('totalTime').value) || 60;
+            const parInput = parseInt(document.getElementById('totalParagraphs').value) || 18;
+            
+            if (isUserClick) {
+                document.getElementById('btnApply').classList.add('applied');
+                document.getElementById('btnApply').innerHTML = 'Resetare';
+            }
+
+            if (timerInterval) clearInterval(timerInterval);
+            isRunning = false;
+            elapsedSeconds = 0;
+            initialSeconds = timeInput * 60;
+            remainingSeconds = initialSeconds;
+
+            let btn = document.getElementById('btnStartPause');
+            btn.innerHTML = '▶ <span class="btn-txt">Start</span>';
+            btn.className = 'btn-start';
+            btn.style.backgroundColor = ''; // Resetăm culoarea dacă a fost terminat
+            btn.style.cursor = 'pointer';
+
+            items = [];
+            historyStack = [];
+
+            items.push({ id: 'intro', title: 'Introducere', type: 'fixed', done: false, allocated: 90, weight: 1, baseWeight: 1 });
+
+            for (let i = 1; i <= parInput; i++) {
+                items.push({ id: i.toString(), title: `Paragraful ${i}`, type: 'flex', weight: 1, baseWeight: 1, done: false, allocated: 0 });
+            }
+
+            items.push({ id: 'rev1', title: 'Întrebarea 1', type: 'fixed', done: false, allocated: 60, weight: 1, baseWeight: 1 });
+            items.push({ id: 'rev2', title: 'Întrebarea 2', type: 'fixed', done: false, allocated: 60, weight: 1, baseWeight: 1 });
+            items.push({ id: 'rev3', title: 'Întrebarea 3', type: 'fixed', done: false, allocated: 60, weight: 1, baseWeight: 1 });
+
+            recalculate();
+            render();
+            updateDisplay();
+        }
+
+        function toggleTimer() {
+            // Nu permite pornirea dacă totul e gata
+            if (items.every(p => p.done)) return;
+
+            let btn = document.getElementById('btnStartPause');
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                btn.innerHTML = '▶ <span class="btn-txt">Start</span>';
+                btn.className = 'btn-start';
+            } else {
+                timerInterval = setInterval(tick, 1000);
+                isRunning = true;
+                btn.innerHTML = '⏸ <span class="btn-txt">Pauză</span>';
+                btn.className = 'btn-pause';
+            }
+        }
+
+        function tick() {
+            remainingSeconds--;
+            elapsedSeconds++;
+            let active = items.find(p => !p.done);
+            if (active) active.allocated--;
+            updateDisplay();
+        }
+
+        function recalculate() {
+            let pendingFlex = items.filter(p => !p.done && p.type === 'flex');
+            let pendingFixed = items.filter(p => !p.done && p.type === 'fixed');
+            let fixedTotal = pendingFixed.reduce((s, p) => s + p.allocated, 0);
+            let flexAvailable = remainingSeconds - fixedTotal;
+            
+            if (pendingFlex.length > 0) {
+                let totalWeight = pendingFlex.reduce((s, p) => s + p.weight, 0);
+                pendingFlex.forEach(p => {
+                    p.allocated = Math.round(flexAvailable * (p.weight / totalWeight));
+                });
+            } else if (pendingFixed.length > 0) {
+                let perItem = Math.round(remainingSeconds / pendingFixed.length);
+                pendingFixed.forEach(p => p.allocated = perItem);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('elapsedDisplay').innerText = "Timp scurs " + formatTime(elapsedSeconds);
+            let remEl = document.getElementById('remainingDisplay');
+            remEl.innerText = "Timp rămas - " + formatTime(remainingSeconds);
+
+            items.forEach(p => {
+                let el = document.getElementById(`time-item-${p.id}`);
+                if (el && !p.done) {
+                    el.innerText = formatTime(p.allocated);
+                    el.style.color = p.allocated < 0 ? "#e74c3c" : "#2c3e50";
+                }
+            });
+        }
+
+        function adjustWeight(id, val) {
+            let p = items.find(x => x.id === id);
+            if (p && !p.done) {
+                p.weight = Math.max(0.2, p.weight + val);
+                recalculate();
+                render();
+            }
+        }
+
+        function resetWeight(id) {
+            let p = items.find(x => x.id === id);
+            if (p) { 
+                p.weight = p.baseWeight || 1; 
+                recalculate(); 
+                render(); 
+            }
+        }
+
+        function mergeItems(idx) {
+            let item1 = items[idx];
+            let item2 = items[idx + 1];
+            
+            if (item1 && item2 && item1.type === 'flex' && item2.type === 'flex') {
+                let nums1 = item1.title.replace('Paragraful ', '');
+                let nums2 = item2.title.replace('Paragraful ', '');
+                
+                item1.title = `Paragraful ${nums1},${nums2}`;
+                item1.weight += item2.weight;
+                item1.baseWeight += item2.baseWeight;
+                
+                items.splice(idx + 1, 1);
+                recalculate();
+                render();
+            }
+        }
+
+        function splitItem(idx) {
+            let item = items[idx];
+            let nums = item.title.replace('Paragraful ', '').split(',');
+            
+            if (nums.length > 1) {
+                let lastNum = nums.pop();
+                item.title = `Paragraful ${nums.join(',')}`;
+                
+                item.weight = Math.max(0.2, item.weight - 1);
+                item.baseWeight -= 1;
+
+                let newItem = {
+                    id: lastNum, 
+                    title: `Paragraful ${lastNum}`,
+                    type: 'flex',
+                    weight: 1,
+                    baseWeight: 1,
+                    done: false,
+                    allocated: 0
+                };
+                
+                items.splice(idx + 1, 0, newItem);
+                
+                recalculate();
+                render();
+            }
+        }
+
+        function markDone(id) {
+            historyStack.push(JSON.parse(JSON.stringify(items)));
+            let idx = items.findIndex(x => x.id === id);
+            for (let i = 0; i <= idx; i++) {
+                if (!items[i].done) {
+                    items[i].done = true;
+                    items[i].finishTime = elapsedSeconds;
+                }
+            }
+            recalculate();
+            render();
+
+            // Verificăm dacă TOATE elementele sunt finalizate pentru a opri cronometrul
+            if (items.every(p => p.done)) {
+                if (timerInterval) clearInterval(timerInterval);
+                isRunning = false;
+                
+                let btn = document.getElementById('btnStartPause');
+                btn.innerHTML = '✔ <span class="btn-txt">Terminat</span>';
+                btn.style.backgroundColor = '#7f8c8d'; // Un gri neutru care indică finalizarea
+                btn.style.cursor = 'default';
+            }
+        }
+
+        function undo() {
+            if (historyStack.length > 0) {
+                let wasFinished = items.every(p => p.done);
+                items = historyStack.pop();
+                
+                // Dacă înainte era totul gata și acum am dat undo, repornim cronometrul automat
+                if (wasFinished && items.some(p => !p.done)) {
+                    let btn = document.getElementById('btnStartPause');
+                    btn.style.backgroundColor = ''; // Revenim la culoarea CSS
+                    btn.style.cursor = 'pointer';
+                    btn.innerHTML = '⏸ <span class="btn-txt">Pauză</span>';
+                    btn.className = 'btn-pause';
+                    
+                    timerInterval = setInterval(tick, 1000);
+                    isRunning = true;
+                }
+
+                recalculate();
+                render();
+            }
+        }
+
+        function resetTimerPrompt() {
+            if (confirm("Resetați sesiunea?")) initApp(true);
+        }
+
+        function render() {
+            const list = document.getElementById('paragraphsList');
+            let active = items.find(x => !x.done);
+            let recapHTML = '';
+            let mainHTML = '';
+
+            items.forEach((p, index) => {
+                let isCurrent = active && active.id === p.id;
+                let isMerged = (p.baseWeight > 1 && p.type === 'flex');
+                
+                let html = `
+                    <div class="paragraph-item ${p.done ? 'done' : ''} ${isCurrent ? 'active' : ''}">
+                        ${isMerged && !p.done ? `<button class="btn-split" onclick="splitItem(${index})" title="Dezunește">-</button>` : ''}
+                        <div class="par-header ${p.done ? 'done-text' : ''}">
+                            <span class="par-title">${p.title}</span>
+                            ${p.done ? 
+                                `<span class="finish-label par-time-container">Finalizat la ${formatTime(p.finishTime)}</span>` : 
+                                `<span class="par-time-container">Timp: <span id="time-item-${p.id}">...</span></span>`
+                            }
+                        </div>
+                        <div class="par-buttons">
+                            ${p.done ? 
+                                `<button class="btn-par btn-undo" onclick="undo()">↩ Revino</button>` :
+                                (p.type === 'flex' ? 
+                                    `<button class="btn-par btn-minus" onclick="adjustWeight('${p.id}', -0.4)">Scurt (-)</button>
+                                     <button class="btn-par btn-std" onclick="resetWeight('${p.id}')">Standard</button>
+                                     <button class="btn-par btn-plus" onclick="adjustWeight('${p.id}', 0.4)">Important (+)</button>` : '') +
+                                `<button class="btn-par btn-finish" onclick="markDone('${p.id}')">Finalizat ✔</button>`
+                            }
+                        </div>
+                    </div>
+                `;
+
+                if (p.id.startsWith('rev')) {
+                    recapHTML += html;
+                } else {
+                    mainHTML += html;
+                    let nextItem = items[index + 1];
+                    if (nextItem && p.type === 'flex' && nextItem.type === 'flex' && !p.done && !nextItem.done) {
+                        mainHTML += `
+                            <div class="merge-container">
+                                <button class="btn-merge" onclick="mergeItems(${index})" title="Unește cu paragraful următor">+</button>
+                            </div>
+                        `;
+                    }
+                }
+            });
+
+            list.innerHTML = mainHTML;
+            if (recapHTML) {
+                let div = document.createElement('div');
+                div.className = 'recap-container';
+                div.innerHTML = `<div class="recap-title">Recapitulare (3 min)</div>` + recapHTML;
+                list.appendChild(div);
+            }
+            updateDisplay();
+        }
+
+        window.onload = () => initApp(false);
+    </script>
+</body>
+</html>
