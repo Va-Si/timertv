@@ -19,14 +19,8 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Returnează fișierul din cache dacă e offline sau încărcat deja
-        if (response) {
-          return response;
-        }
-        
-        // Dacă nu e în cache, încearcă să acceseze rețeaua
+        if (response) return response;
         return fetch(event.request).catch(() => {
-          // Fallback final dacă internetul e oprit de tot
           if (event.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
