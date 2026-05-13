@@ -7,13 +7,13 @@
   "theme_color": "#2c3e50",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%8F%B1%EF%B8%8F%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjU1IiByPSIzNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjU1IiByPSI0IiBmaWxsPSIjZTc0YzNjIi8+PGxpbmUgeDE9IjUwIiB5MT0iNTUiIHgyPSI1MCIgeTI9IjMwIiBzdHJva2U9IiNlNzRjM2MiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjUwIiB5MT0iNTUiIHgyPSI2NSIgeTI9IjU1IiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjQwIiB5MT0iMTAiIHgyPSI2MCIgeTI9IjEwIiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjIwIiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iOCIvPjxsaW5lIHgxPSI3NSIgeTE9IjMwIiB4Mj0iODUiIHkyPSIyMCIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%8F%B1%EF%B8%8F%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjU1IiByPSIzNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjU1IiByPSI0IiBmaWxsPSIjZTc0YzNjIi8+PGxpbmUgeDE9IjUwIiB5MT0iNTUiIHgyPSI1MCIgeTI9IjMwIiBzdHJva2U9IiNlNzRjM2MiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjUwIiB5MT0iNTUiIHgyPSI2NSIgeTI9IjU1IiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjQwIiB5MT0iMTAiIHgyPSI2MCIgeTI9IjEwIiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjIwIiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iOCIvPjxsaW5lIHgxPSI3NSIgeTE9IjMwIiB4Mj0iODUiIHkyPSIyMCIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
