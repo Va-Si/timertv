@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cronometru - Turnul de Veghe</title>
     
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%8F%B1%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <!-- Favicon corect, format curat, desenat vectorial, pe care browserul nu îl va mai pierde! -->
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjU1IiByPSIzNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjgiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjU1IiByPSI0IiBmaWxsPSIjZTc0YzNjIi8+PGxpbmUgeDE9IjUwIiB5MT0iNTUiIHgyPSI1MCIgeTI9IjMwIiBzdHJva2U9IiNlNzRjM2MiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjUwIiB5MT0iNTUiIHgyPSI2NSIgeTI9IjU1IiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjQwIiB5MT0iMTAiIHgyPSI2MCIgeTI9IjEwIiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjIwIiBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iOCIvPjxsaW5lIHgxPSI3NSIgeTE9IjMwIiB4Mj0iODUiIHkyPSIyMCIgc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -236,32 +238,59 @@
             let active = items.find(x => !x.done); let recapHTML = ''; let mainHTML = '';
             items.forEach((p, index) => {
                 let isCurrent = active && active.id === p.id; let isMerged = (p.baseWeight > 1 && p.type === 'flex');
-                let splitBtnHTML = (isMerged && !p.done) ? '<button class="btn-split" onclick="splitItem(' + index + ')" title="Dezunește">-</button>' : '';
-                let timeLabelHTML = p.done ? '<span class="finish-label par-time-container">Finalizat la ' + formatTime(p.finishTime) + '</span>' : '<span class="par-time-container">Timp: <span id="time-item-' + p.id + '">...</span></span>';
+                
+                let splitBtnHTML = (isMerged && !p.done) 
+                    ? '<button class="btn-split" onclick="splitItem(' + index + ')" title="Dezunește">-</button>' 
+                    : '';
+                
+                let timeLabelHTML = p.done 
+                    ? '<span class="finish-label par-time-container">Finalizat la ' + formatTime(p.finishTime) + '</span>' 
+                    : '<span class="par-time-container">Timp: <span id="time-item-' + p.id + '">...</span></span>';
                 
                 let controlBtnsHTML = '';
-                if (p.done) { controlBtnsHTML = '<button class="btn-par btn-undo" onclick="undo()">↩ Revino</button>'; } 
-                else {
-                    let flexBtns = (p.type === 'flex') ? '<button class="btn-par btn-minus" onclick="adjustWeight(\'' + p.id + '\', -0.4)">Scurt (-)</button><button class="btn-par btn-std" onclick="resetWeight(\'' + p.id + '\')">Standard</button><button class="btn-par btn-plus" onclick="adjustWeight(\'' + p.id + '\', 0.4)">Important (+)</button>' : '';
+                if (p.done) {
+                    controlBtnsHTML = '<button class="btn-par btn-undo" onclick="undo()">↩ Revino</button>';
+                } else {
+                    let flexBtns = (p.type === 'flex') 
+                        ? '<button class="btn-par btn-minus" onclick="adjustWeight(\'' + p.id + '\', -0.4)">Scurt (-)</button>' +
+                          '<button class="btn-par btn-std" onclick="resetWeight(\'' + p.id + '\')">Standard</button>' +
+                          '<button class="btn-par btn-plus" onclick="adjustWeight(\'' + p.id + '\', 0.4)">Important (+)</button>'
+                        : '';
                     controlBtnsHTML = flexBtns + '<button class="btn-par btn-finish" onclick="markDone(\'' + p.id + '\')">Finalizat ✔</button>';
                 }
 
-                let html = '<div class="paragraph-item ' + (p.done ? 'done' : '') + ' ' + (isCurrent ? 'active' : '') + '">' + splitBtnHTML +
-                               '<div class="par-header ' + (p.done ? 'done-text' : '') + '"><span class="par-title">' + p.title + '</span>' + timeLabelHTML + '</div>' +
-                               '<div class="par-buttons-container"><div class="par-buttons">' + controlBtnsHTML + '</div></div></div>';
+                let html = '<div class="paragraph-item ' + (p.done ? 'done' : '') + ' ' + (isCurrent ? 'active' : '') + '">' +
+                               splitBtnHTML +
+                               '<div class="par-header ' + (p.done ? 'done-text' : '') + '">' +
+                                   '<span class="par-title">' + p.title + '</span>' +
+                                   timeLabelHTML +
+                               '</div>' +
+                               '<div class="par-buttons-container">' +
+                                   '<div class="par-buttons">' +
+                                       controlBtnsHTML +
+                                   '</div>' +
+                               '</div>' +
+                           '</div>';
 
-                if (p.id.startsWith('rev')) { recapHTML += html; } 
-                else {
+                if (p.id.startsWith('rev')) {
+                    recapHTML += html;
+                } else {
                     mainHTML += html;
-                    if (items[index + 1] && p.type === 'flex' && items[index + 1].type === 'flex' && !p.done && !items[index + 1].done) {
-                        mainHTML += '<div class="merge-container"><button class="btn-merge" onclick="mergeItems(' + index + ')" title="Unește cu paragraful următor">+</button></div>';
+                    let nextItem = items[index + 1];
+                    if (nextItem && p.type === 'flex' && nextItem.type === 'flex' && !p.done && !nextItem.done) {
+                        mainHTML += '<div class="merge-container">' +
+                                        '<button class="btn-merge" onclick="mergeItems(' + index + ')" title="Unește cu paragraful următor">+</button>' +
+                                    '</div>';
                     }
                 }
             });
+
             list.innerHTML = mainHTML;
             if (recapHTML) {
-                let div = document.createElement('div'); div.className = 'recap-container';
-                div.innerHTML = '<div class="recap-title">Recapitulare (3 min)</div>' + recapHTML; list.appendChild(div);
+                let div = document.createElement('div');
+                div.className = 'recap-container';
+                div.innerHTML = '<div class="recap-title">Recapitulare (3 min)</div>' + recapHTML;
+                list.appendChild(div);
             }
             updateDisplay();
         }
