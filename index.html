@@ -577,30 +577,39 @@
                 let isCurrent = active && active.id === p.id;
                 let isMerged = (p.baseWeight > 1 && p.type === 'flex');
                 
-                let html = `
-                    <div class="paragraph-item ${p.done ? 'done' : ''} ${isCurrent ? 'active' : ''}">
-                        ${isMerged && !p.done ? `<button class="btn-split" onclick="splitItem(${index})" title="Dezunește">-</button>` : ''}
-                        <div class="par-header ${p.done ? 'done-text' : ''}">
-                            <span class="par-title">${p.title}</span>
-                            ${p.done ? 
-                                `<span class="finish-label par-time-container">Finalizat la ${formatTime(p.finishTime)}</span>` : 
-                                `<span class="par-time-container">Timp: <span id="time-item-${p.id}">...</span></span>`
-                            }
-                        </div>
-                        <div class="par-buttons-container">
-                            <div class="par-buttons">
-                                ${p.done ? 
-                                    `<button class="btn-par btn-undo" onclick="undo()">↩ Revino</button>` :
-                                    (p.type === 'flex' ? 
-                                        `<button class="btn-par btn-minus" onclick="adjustWeight('${p.id}', -0.4)">Scurt (-)</button>
-                                         <button class="btn-par btn-std" onclick="resetWeight('${p.id}')">Standard</button>
-                                         <button class="btn-par btn-plus" onclick="adjustWeight('${p.id}', 0.4)">Important (+)</button>` : '') +
-                                    `<button class="btn-par btn-finish" onclick="markDone('${p.id}')">Finalizat ✔</button>`
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
+                // Variabile construite clasic pentru a evita eroarea falsă din editorul GitHub
+                let splitBtnHTML = (isMerged && !p.done) 
+                    ? '<button class="btn-split" onclick="splitItem(' + index + ')" title="Dezunește">-</button>' 
+                    : '';
+                
+                let timeLabelHTML = p.done 
+                    ? '<span class="finish-label par-time-container">Finalizat la ' + formatTime(p.finishTime) + '</span>' 
+                    : '<span class="par-time-container">Timp: <span id="time-item-' + p.id + '">...</span></span>';
+                
+                let controlBtnsHTML = '';
+                if (p.done) {
+                    controlBtnsHTML = '<button class="btn-par btn-undo" onclick="undo()">↩ Revino</button>';
+                } else {
+                    let flexBtns = (p.type === 'flex') 
+                        ? '<button class="btn-par btn-minus" onclick="adjustWeight(\'' + p.id + '\', -0.4)">Scurt (-)</button>' +
+                          '<button class="btn-par btn-std" onclick="resetWeight(\'' + p.id + '\')">Standard</button>' +
+                          '<button class="btn-par btn-plus" onclick="adjustWeight(\'' + p.id + '\', 0.4)">Important (+)</button>'
+                        : '';
+                    controlBtnsHTML = flexBtns + '<button class="btn-par btn-finish" onclick="markDone(\'' + p.id + '\')">Finalizat ✔</button>';
+                }
+
+                let html = '<div class="paragraph-item ' + (p.done ? 'done' : '') + ' ' + (isCurrent ? 'active' : '') + '">' +
+                               splitBtnHTML +
+                               '<div class="par-header ' + (p.done ? 'done-text' : '') + '">' +
+                                   '<span class="par-title">' + p.title + '</span>' +
+                                   timeLabelHTML +
+                               '</div>' +
+                               '<div class="par-buttons-container">' +
+                                   '<div class="par-buttons">' +
+                                       controlBtnsHTML +
+                                   '</div>' +
+                               '</div>' +
+                           '</div>';
 
                 if (p.id.startsWith('rev')) {
                     recapHTML += html;
@@ -608,11 +617,9 @@
                     mainHTML += html;
                     let nextItem = items[index + 1];
                     if (nextItem && p.type === 'flex' && nextItem.type === 'flex' && !p.done && !nextItem.done) {
-                        mainHTML += `
-                            <div class="merge-container">
-                                <button class="btn-merge" onclick="mergeItems(${index})" title="Unește cu paragraful următor">+</button>
-                            </div>
-                        `;
+                        mainHTML += '<div class="merge-container">' +
+                                        '<button class="btn-merge" onclick="mergeItems(' + index + ')" title="Unește cu paragraful următor">+</button>' +
+                                    '</div>';
                     }
                 }
             });
@@ -621,7 +628,7 @@
             if (recapHTML) {
                 let div = document.createElement('div');
                 div.className = 'recap-container';
-                div.innerHTML = `<div class="recap-title">Recapitulare (3 min)</div>` + recapHTML;
+                div.innerHTML = '<div class="recap-title">Recapitulare (3 min)</div>' + recapHTML;
                 list.appendChild(div);
             }
             updateDisplay();
