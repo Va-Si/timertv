@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cronometru - Turnul de Veghe</title>
+    <!-- Favicon (Emoji Clock) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+    <!-- PWA Setup (Force as Web App) -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#f4f7f6">
+    <link rel="manifest" href='data:application/manifest+json,{ "name": "Cronometru Turn", "short_name": "TurnTimer", "start_url": ".", "display": "standalone", "background_color": "#f4f7f6", "theme_color": "#2c3e50", "icons": [ { "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>", "sizes": "192x192", "type": "image/svg+xml" } ] }'>
+
     <style>
         /* Regula vitală pentru ca marginile și padding-ul să nu strice ecranul pe mobil */
         * {
@@ -105,6 +114,7 @@
             margin-bottom: 12px; border-radius: 8px; display: flex; flex-direction: column;
             position: relative;
             padding-top: 25px;
+            min-height: 110px; /* Asigură o înălțime minimă constantă */
         }
         .paragraph-item.active { border-left: 6px solid #3498db; background-color: #eaf2f8; }
         .paragraph-item.done { border-left: 4px solid #2ecc71; background-color: #f9fdf9; }
@@ -125,13 +135,32 @@
         .done-text { color: #7f8c8d; text-decoration: line-through; }
         .finish-label { color: #27ae60; font-size: 0.9em; font-weight: bold; text-decoration: none !important; }
         
-        .par-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        /* Container pentru butoane cu înălțime fixă/spațiu rezervat */
+        .par-buttons-container {
+            display: flex;
+            min-height: 36px; /* Înălțimea aproximativă a rândului de butoane */
+        }
+
+        .par-buttons { 
+            display: flex; 
+            gap: 6px; 
+            flex-wrap: wrap; 
+            width: 100%;
+        }
+        
         .btn-par { flex: 1; padding: 10px 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .btn-minus { background: #f39c12; color: white; }
         .btn-plus { background: #9b59b6; color: white; }
         .btn-std { background: #3498db; color: white; }
         .btn-finish { background: #2ecc71; color: white; min-width: 100px; font-size: 14px; }
-        .btn-undo { background: #e74c3c; color: white; width: 100%; }
+        
+        /* Modificat: butonul undo ocupă tot spațiul containerului */
+        .btn-undo { 
+            background: #e74c3c; 
+            color: white; 
+            width: 100%; 
+            height: 100%; /* Ocupă toată înălțimea disponibilă */
+        }
 
         /* Butonul de unire (+) */
         .merge-container {
@@ -236,9 +265,13 @@
                 padding: 12px 2px; /* Butoane mai înalte, perfecte pentru atingere pe touch */
                 font-size: 12px;
             }
-            .btn-finish, .btn-undo {
+            .btn-finish {
                 flex-basis: 100%; /* Butonul de Finalizare va ocupa tot rândul de jos */
                 margin-top: 5px;
+            }
+            /* Asigură-te că containerul are înălțimea corectă și pe mobil pentru a nu sări conținutul la undo */
+            .par-buttons-container {
+                min-height: 80px; 
             }
         }
     </style>
@@ -281,6 +314,29 @@
     <div id="paragraphsList"></div>
 
     <script>
+        // Register Service Worker for strict offline capabilities if run on a server
+        if ('serviceWorker' in navigator) {
+            try {
+                // Browserele moderne pot bloca înregistrarea prin protocolul 'blob:' din motive de securitate.
+                // Folosim try-catch pentru a nu genera erori care opresc restul aplicației.
+                const swCode = `
+                    self.addEventListener('install', (e) => { e.waitUntil(self.skipWaiting()); });
+                    self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(fetch(e.request).catch(() => new Response('Offline mode')));
+                    });
+                `;
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => {
+                    // Ignorăm eroarea generată de restricțiile browser-ului asupra blob-urilor.
+                    console.warn('Înregistrarea Service Worker a fost blocată (comportament normal pentru fișiere unice):', err.message);
+                });
+            } catch (error) {
+                console.warn('Funcția offline avansată a fost ignorată din cauza securității browserului.', error);
+            }
+        }
+
         let initialSeconds = 0; 
         let remainingSeconds = 0;
         let elapsedSeconds = 0;
@@ -527,15 +583,17 @@
                                 `<span class="par-time-container">Timp: <span id="time-item-${p.id}">...</span></span>`
                             }
                         </div>
-                        <div class="par-buttons">
-                            ${p.done ? 
-                                `<button class="btn-par btn-undo" onclick="undo()">↩ Revino</button>` :
-                                (p.type === 'flex' ? 
-                                    `<button class="btn-par btn-minus" onclick="adjustWeight('${p.id}', -0.4)">Scurt (-)</button>
-                                     <button class="btn-par btn-std" onclick="resetWeight('${p.id}')">Standard</button>
-                                     <button class="btn-par btn-plus" onclick="adjustWeight('${p.id}', 0.4)">Important (+)</button>` : '') +
-                                `<button class="btn-par btn-finish" onclick="markDone('${p.id}')">Finalizat ✔</button>`
-                            }
+                        <div class="par-buttons-container">
+                            <div class="par-buttons">
+                                ${p.done ? 
+                                    `<button class="btn-par btn-undo" onclick="undo()">↩ Revino</button>` :
+                                    (p.type === 'flex' ? 
+                                        `<button class="btn-par btn-minus" onclick="adjustWeight('${p.id}', -0.4)">Scurt (-)</button>
+                                         <button class="btn-par btn-std" onclick="resetWeight('${p.id}')">Standard</button>
+                                         <button class="btn-par btn-plus" onclick="adjustWeight('${p.id}', 0.4)">Important (+)</button>` : '') +
+                                    `<button class="btn-par btn-finish" onclick="markDone('${p.id}')">Finalizat ✔</button>`
+                                }
+                            </div>
                         </div>
                     </div>
                 `;
