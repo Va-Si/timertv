@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cronometru - Turnul de Veghe</title>
+    
     <!-- Favicon (Emoji Clock) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
-    <!-- PWA Setup (Force as Web App) -->
+    
+    <!-- Legătura către Manifest pentru funcția de instalare PWA -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Setări PWA specifice iOS (Apple) -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f4f7f6">
-    <link rel="manifest" href='data:application/manifest+json,{ "name": "Cronometru Turn", "short_name": "TurnTimer", "start_url": ".", "display": "standalone", "background_color": "#f4f7f6", "theme_color": "#2c3e50", "icons": [ { "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>", "sizes": "192x192", "type": "image/svg+xml" } ] }'>
 
     <style>
         /* Regula vitală pentru ca marginile și padding-ul să nu strice ecranul pe mobil */
@@ -138,7 +142,7 @@
         /* Container pentru butoane cu înălțime fixă/spațiu rezervat */
         .par-buttons-container {
             display: flex;
-            min-height: 36px; /* Înălțimea aproximativă a rândului de butoane */
+            min-height: 36px; /* Înălțimea aproximativă a rândului de butoane pe desktop */
         }
 
         .par-buttons { 
@@ -146,6 +150,7 @@
             gap: 6px; 
             flex-wrap: wrap; 
             width: 100%;
+            height: 100%; /* Lasă containerul intern să se întindă */
         }
         
         .btn-par { flex: 1; padding: 10px 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
@@ -160,6 +165,7 @@
             color: white; 
             width: 100%; 
             height: 100%; /* Ocupă toată înălțimea disponibilă */
+            font-size: 14px;
         }
 
         /* Butonul de unire (+) */
@@ -269,9 +275,17 @@
                 flex-basis: 100%; /* Butonul de Finalizare va ocupa tot rândul de jos */
                 margin-top: 5px;
             }
-            /* Asigură-te că containerul are înălțimea corectă și pe mobil pentru a nu sări conținutul la undo */
+            
+            /* REZOLVARE BUG SĂRITURĂ CHENAR LA FINALIZARE */
+            /* Setăm o înălțime minimă fixă pentru zona butoanelor pe mobil, indiferent de stare */
             .par-buttons-container {
-                min-height: 80px; 
+                min-height: 80px; /* Înălțimea pe care o ocupă butoanele -, std, + și Finalizat */
+            }
+            
+            /* Forțăm butonul Undo să se întindă pe toată această înălțime */
+            .btn-undo {
+                min-height: 100%;
+                margin-top: 0; /* Anulează marginea superioară care apărea pe Finalizat */
             }
         }
     </style>
@@ -314,27 +328,17 @@
     <div id="paragraphsList"></div>
 
     <script>
-        // Register Service Worker for strict offline capabilities if run on a server
+        // Înregistrarea curată a Service Worker-ului dintr-un fișier extern (sw.js)
         if ('serviceWorker' in navigator) {
-            try {
-                // Browserele moderne pot bloca înregistrarea prin protocolul 'blob:' din motive de securitate.
-                // Folosim try-catch pentru a nu genera erori care opresc restul aplicației.
-                const swCode = `
-                    self.addEventListener('install', (e) => { e.waitUntil(self.skipWaiting()); });
-                    self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
-                    self.addEventListener('fetch', (e) => {
-                        e.respondWith(fetch(e.request).catch(() => new Response('Offline mode')));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker înregistrat cu succes: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('Înregistrarea ServiceWorker a eșuat: ', err);
                     });
-                `;
-                const blob = new Blob([swCode], {type: 'application/javascript'});
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl).catch(err => {
-                    // Ignorăm eroarea generată de restricțiile browser-ului asupra blob-urilor.
-                    console.warn('Înregistrarea Service Worker a fost blocată (comportament normal pentru fișiere unice):', err.message);
-                });
-            } catch (error) {
-                console.warn('Funcția offline avansată a fost ignorată din cauza securității browserului.', error);
-            }
+            });
         }
 
         let initialSeconds = 0; 
