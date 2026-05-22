@@ -1,0 +1,1 @@
+versia veche doat tv
