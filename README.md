@@ -1,1 +1,1 @@
-versia veche doat tv
+versia veche doar tv
